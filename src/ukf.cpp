@@ -139,7 +139,7 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
   }
 
   // Elapsed time between current and previous measurements in seconds
-  auto dt = static_cast<double> ((meas_package.timestamp_) - previous_timestamp_) * 1e-6);
+  auto dt = static_cast<double> ((meas_package.timestamp_ - previous_timestamp_) * 1e-6);
 
   previous_timestamp_ = meas_package.timestamp_;
 
