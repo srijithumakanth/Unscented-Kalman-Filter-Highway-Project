@@ -292,6 +292,60 @@ void UKF::PredictMeanAndCovariance()
   }
 }
 
+void UKF::PredictRadarMeasurement()
+{
+  // transform sigma points into measurement space
+  for (int i = 0; i < 2 * n_aug_ + 1; ++i) 
+  {  // 2n+1 simga points
+    
+    // extract values for better readability
+    double p_x = Xsig_pred_(0,i);
+    double p_y = Xsig_pred_(1,i);
+    double v  = Xsig_pred_(2,i);
+    double yaw = Xsig_pred_(3,i);
+
+    double v1 = cos(yaw)*v;
+    double v2 = sin(yaw)*v;
+
+    // measurement model
+    Zsig_(0,i) = sqrt(p_x*p_x + p_y*p_y);                       // r
+    Zsig_(1,i) = atan2(p_y, p_x);                                // phi
+
+    if (Zsig_(0, i) < 0.001) // to prevent segfault because of divide by 0
+    {
+      Zsig_(2,i) = (p_x*v1 + p_y*v2) / 0.001;   // r_dot
+    }
+    else
+    {
+      Zsig_(2,i) = (p_x*v1 + p_y*v2) / Zsig_(0,i);   // r_dot
+    }
+  }
+
+  // mean predicted measurement
+  z_pred_.fill(0.0);
+  for (int i = 0; i < 2 * n_aug_ + 1; ++i) {
+    z_pred_ = z_pred_ + weights_(i) * Zsig_.col(i);
+  }
+
+  // innovation covariance matrix S
+  S_.fill(0.0);
+  for (int i = 0; i < 2 * n_aug_ + 1; ++i) 
+  {  // 2n+1 simga points
+    
+    // residual
+    VectorXd z_diff = Zsig_.col(i) - z_pred_;
+
+    // angle normalization
+    while (z_diff(1) > M_PI) z_diff(1) -= 2.*M_PI;
+    while (z_diff(1) < -M_PI) z_diff(1) += 2.*M_PI;
+
+    S_ = S_ + weights_(i) * z_diff * z_diff.transpose();
+  }
+
+  // add measurement noise covariance matrix
+  S_ = S_ + R_radar_;
+}
+
 void UKF::UpdateLidar(MeasurementPackage meas_package) {
   /**
    * TODO: Complete this function! Use lidar data to update the belief 

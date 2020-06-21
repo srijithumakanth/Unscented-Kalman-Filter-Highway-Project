@@ -52,6 +52,12 @@ class UKF {
   // Predict mean and covariance
   void PredictMeanAndCovariance();
 
+  // Predict RADAR measurements
+  void PredictRadarMeasurement();
+
+  // Predict LiDAR measurements
+  void PredictLidarMeasurement();
+
   // initially set to false, set to true in first call of ProcessMeasurement
   bool is_initialized_;
 
