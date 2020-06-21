@@ -52,20 +52,14 @@ UKF::UKF() {
   // initially set to false, set to true in first call of ProcessMeasurement
   bool is_initialized_ = false;
 
-  // predicted sigma points matrix
-  Eigen::MatrixXd Xsig_pred_;
-
   // State dimension
-  int n_x_ = 5;
+  n_x_ = 5;
 
   // Augmented state dimension
-  int n_aug_ = 7;
-
-  // Measurement dimension, radar can measure r, phi, and r_dot
-  int n_z_ = 3;
+  n_aug_ = 7;
 
   // Sigma point spreading parameter
-  double lambda_ = 3 - n_aug_;
+  lambda_ = 3 - n_x_;
   
   // initial state vector
   x_ = VectorXd::Zero(n_x_);
@@ -159,18 +153,27 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
 
   // Measurement Update step
   
+  // Set matrix dimentions for initialization purposes
+  if (meas_package.sensor_type_ == MeasurementPackage::RADAR)
+  {
+    n_z_ = 3;
+  }
+  else if (meas_package.sensor_type_ == MeasurementPackage::LASER)
+  {
+    n_z_ = 2;
+  }
+  
   // Sigma points in measurement space 
   Zsig_ = MatrixXd::Zero(n_z_, 2 * n_aug_ + 1);
 
   // Mean predicted measurement
-  z_pred_ = MatrixXd::Zero(n_z_, n_z_);
+  z_pred_ = VectorXd::Zero(n_z_);
 
   // Measurement covariance matrix S
   S_ = MatrixXd::Zero(n_z_, n_z_);
   
   if (meas_package.sensor_type_ == MeasurementPackage::RADAR)
   {
-    n_z_ = 3;
     PredictRadarMeasurement();
 
     // Update NIS
@@ -179,7 +182,6 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
   }
   else if (meas_package.sensor_type_ == MeasurementPackage::LASER)
   {
-    n_z_ = 2;
     PredictLidarMeasurement();
 
     // Update NIS
