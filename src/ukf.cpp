@@ -14,12 +14,6 @@ UKF::UKF() {
   // if this is false, radar measurements will be ignored (except during init)
   use_radar_ = true;
 
-  // initial state vector
-  x_ = VectorXd(5);
-
-  // initial covariance matrix
-  P_ = MatrixXd(5, 5);
-
   // Process noise standard deviation longitudinal acceleration in m/s^2
   std_a_ = 30;
 
@@ -54,6 +48,33 @@ UKF::UKF() {
    * TODO: Complete the initialization. See ukf.h for other member properties.
    * Hint: one or more values initialized above might be wildly off...
    */
+
+  // initially set to false, set to true in first call of ProcessMeasurement
+  bool is_initialized_ = false;
+
+  // predicted sigma points matrix
+  Eigen::MatrixXd Xsig_pred_;
+
+  // State dimension
+  int n_x_ = 5;
+
+  // Augmented state dimension
+  int n_aug_ = 7;
+
+  // Sigma point spreading parameter
+  double lambda_ = 3 - n_aug_;
+  
+  // initial state vector
+  x_ = VectorXd(n_x_);
+
+  // initial covariance matrix
+  P_ = MatrixXd(n_x_, n_x_);
+
+  // predicted sigma points matrix
+  Xsig_pred_ = MatrixXd(n_x_, 2 * n_aug_ + 1);
+
+  // Weights of sigma points
+  weights_ = VectorXd(2 * n_aug_ + 1);
 }
 
 UKF::~UKF() {}
