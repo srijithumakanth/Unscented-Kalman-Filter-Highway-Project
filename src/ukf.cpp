@@ -1,5 +1,6 @@
 #include "ukf.h"
 #include "Eigen/Dense"
+#include <iostream>
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
@@ -10,15 +11,17 @@ using Eigen::VectorXd;
 UKF::UKF() {
   // if this is false, laser measurements will be ignored (except during init)
   use_laser_ = true;
+  // use_laser_ = false;
 
   // if this is false, radar measurements will be ignored (except during init)
   use_radar_ = true;
+  // use_radar_ = false;
 
   // Process noise standard deviation longitudinal acceleration in m/s^2
-  std_a_ = 30;
+  std_a_ = 1.5; //5.0
 
   // Process noise standard deviation yaw acceleration in rad/s^2
-  std_yawdd_ = 30;
+  std_yawdd_ = 0.8; //0.8
   
   /**
    * DO NOT MODIFY measurement noise values below.
@@ -63,10 +66,17 @@ UKF::UKF() {
   
   // initial state vector
   x_ = VectorXd::Zero(n_x_);
+  // x_ = VectorXd::Ones(n_x_);
 
   // initial covariance matrix
-  P_ = MatrixXd::Zero(n_x_, n_x_);
-
+  // [p_x p_y vel_abs yaw_angle yaw_rate]
+  
+  // P_ = MatrixXd::Zero(n_x_, n_x_);
+  P_ = MatrixXd::Identity(n_x_, n_x_);
+  P_(3,3) = 0.09; //0.19
+  P_(4,4) = 0.0225; // 0.0225
+  // std::cout << P_ << std::endl;
+  
   // predicted sigma points matrix
   Xsig_pred_ = MatrixXd::Zero(n_x_, 2 * n_aug_ + 1);
 
@@ -179,6 +189,7 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
     // Update NIS
     auto residual = meas_package.raw_measurements_ - z_pred_;
     NIS_radar_ = residual.transpose() * S_.inverse() * residual;
+    std::cout << "NIS RADAR = " << NIS_radar_ << std::endl;
   }
   else if (meas_package.sensor_type_ == MeasurementPackage::LASER)
   {
@@ -187,6 +198,7 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
     // Update NIS
     auto residual = meas_package.raw_measurements_ - z_pred_;
     NIS_laser_ = residual.transpose() * S_.inverse() * residual;
+    std::cout << "NIS LiDAR = " << NIS_laser_ << std::endl;
   }
 
   // State Update step
@@ -395,12 +407,12 @@ void UKF::PredictLidarMeasurement()
    * covariance, P_.
   */ 
   // transform sigma points into measurement space
-  for (int i = 0; i < 2 * n_aug_ + 1; ++i) 
+  for (int i = 0; i < 2 * n_aug_ + 1; i++) 
   {  // 2n+1 simga points
     
     // extract values for better readability
-    double p_x = Xsig_pred_(0,i);
-    double p_y = Xsig_pred_(1,i);
+    Zsig_(0,i) = Xsig_pred_(0,i);
+    Zsig_(1,i) = Xsig_pred_(1,i);
 
     // mean predicted measurement
     z_pred_.fill(0.0);
@@ -411,7 +423,7 @@ void UKF::PredictLidarMeasurement()
 
     // innovation covariance matrix S
     S_.fill(0.0);
-    for (int i = 0; i < 2 * n_aug_ + 1; ++i) 
+    for (int i = 0; i < 2 * n_aug_ + 1; i++) 
     {  // 2n+1 simga points
       
       // residual
