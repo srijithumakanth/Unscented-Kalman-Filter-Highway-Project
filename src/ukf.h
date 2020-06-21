@@ -5,6 +5,7 @@
 #include "measurement_package.h"
 
 using Eigen::MatrixXd;
+using Eigen::VectorXd;
 
 class UKF {
  public:
@@ -31,18 +32,6 @@ class UKF {
    */
   void Prediction(double delta_t);
 
-  /**
-   * Updates the state and the state covariance matrix using a laser measurement
-   * @param meas_package The measurement at k+1
-   */
-  void UpdateLidar(MeasurementPackage meas_package);
-
-  /**
-   * Updates the state and the state covariance matrix using a radar measurement
-   * @param meas_package The measurement at k+1
-   */
-  void UpdateRadar(MeasurementPackage meas_package);
-
   // Generate Augmented sigma points
   void AugmentedSigmaPoints(MatrixXd& Xsig_aug);
 
@@ -52,12 +41,15 @@ class UKF {
   // Predict mean and covariance
   void PredictMeanAndCovariance();
 
-  // Predict RADAR measurements
+  // Updates the state and the state covariance matrix using a radar measurement
   void PredictRadarMeasurement();
 
-  // Predict LiDAR measurements
+  // Updates the state and the state covariance matrix using a laser measurement
   void PredictLidarMeasurement();
 
+  // Update state
+  void UpdateState(const VectorXd& z);
+  
   // initially set to false, set to true in first call of ProcessMeasurement
   bool is_initialized_;
 
