@@ -61,20 +61,43 @@ UKF::UKF() {
   // Augmented state dimension
   int n_aug_ = 7;
 
+  // Measurement dimension, radar can measure r, phi, and r_dot
+  int n_z_ = 3;
+
   // Sigma point spreading parameter
   double lambda_ = 3 - n_aug_;
   
   // initial state vector
-  x_ = VectorXd(n_x_);
+  x_ = VectorXd::Zero(n_x_);
 
   // initial covariance matrix
-  P_ = MatrixXd(n_x_, n_x_);
+  P_ = MatrixXd::Zero(n_x_, n_x_);
 
   // predicted sigma points matrix
-  Xsig_pred_ = MatrixXd(n_x_, 2 * n_aug_ + 1);
+  Xsig_pred_ = MatrixXd::Zero(n_x_, 2 * n_aug_ + 1);
 
   // Weights of sigma points
-  weights_ = VectorXd(2 * n_aug_ + 1);
+  weights_ = VectorXd::Zero(2 * n_aug_ + 1);
+
+  // Measurement nosie covariance R (Laser)
+  R_laser_ = MatrixXd::Zero(2, 2);
+  R_laser_ << std_laspx_ * std_laspx_, 0,
+              0                      , std_laspy_ * std_laspy_;  
+
+  // Measurement nosie covariance R (RADAR)
+  R_radar_ = MatrixXd::Zero(3, 3);
+  R_radar_ << std_radr_ * std_radr_, 0,                         0,
+              0                    , std_radphi_ * std_radphi_, 0,
+              0                    , 0                        , std_radrd_ * std_radrd_; 
+
+  // NIS for laser
+  NIS_laser_ = 0;
+
+  // NIS for radar
+  NIS_radar_ = 0;
+
+  // Previous timestamp
+  long previous_timestamp_ = 0;
 }
 
 UKF::~UKF() {}

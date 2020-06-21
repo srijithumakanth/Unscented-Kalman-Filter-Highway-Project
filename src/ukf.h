@@ -95,6 +95,30 @@ class UKF {
 
   // Sigma point spreading parameter
   double lambda_;
+
+  // Measurement dimension, radar can measure r, phi, and r_dot
+  int n_z_;
+
+  // Sigma points in measurement space 
+  Eigen::MatrixXd Zsig_;
+
+  // Mean predicted measurement
+  Eigen::VectorXd z_pred_;
+
+  // Measurement covariance matrix S
+  Eigen::MatrixXd S_;
+
+  // Measurement nosie covariance R
+  Eigen::MatrixXd R_laser_, R_radar_;
+
+  // NIS for laser
+  double NIS_laser_;
+
+  // NIS for radar
+  double NIS_radar_;
+
+  // Previous timestamp
+  long previous_timestamp_;
 };
 
 #endif  // UKF_H
